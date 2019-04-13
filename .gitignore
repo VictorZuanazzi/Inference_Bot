@@ -2,3 +2,7 @@
 snli_1\.0/
 
 GloVe-1\.2/
+
+code/__pycache__/
+
+code/\.word_vectors_cache/
