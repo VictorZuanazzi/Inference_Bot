@@ -121,12 +121,34 @@ def get_snli(transitions=False):
     return data
     
     
+def vocab_from_snli(data=False):
+    """builds a vocabulary from snli data.
+    Input: 
+        data: (bool=False or torchnlp.datasets.Dataset), if False it returns the
+            vocab for the training set of snli. If a dataset is given, it 
+            returns the vocab for the dataset. 
+    Output:
+        Same output as from vocab_embeddings()
+    """
     
+    if not data:
+        data = get_snli()
+        data.pop('dev')
+        data.pop('test')
+        data = data["train"]
     
+    #build a list with all sentences
+    all_sentences = []
+    for d in data:
+        all_sentences.append(d["premise"])
+        all_sentences.append(d["hypothesis"])
     
+    #returns the vocab dict for all sentences.
+    return vocab_embeddings(all_sentences)
     
+        
     
-    
+
     
     
     
