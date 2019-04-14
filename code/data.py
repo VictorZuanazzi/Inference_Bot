@@ -12,6 +12,7 @@ This file contains functionalities to:
 """
 
 from torchnlp.word_to_vector import GloVe
+from torchnlp.datasets.snli import snli_dataset
 import os
 import numpy as np
 import torch
@@ -76,7 +77,48 @@ def create_vocab(sentences, case_sensitive=True):
     return vocab
             
     
+def vocab_embeddings(sentences, case_sensitive=True, embedding_type='840B'):
+    """vocabulary with embeddings from sentences
+    Input:
+        sentences: (iterable(str)) an iterable containing the sentences.
+        case_sensitive: (bool) if False all words are returned lowered cased, 
+            if True they remain as is.
+        embedding_type: (str) only '840B' is supported."""
     
+    #get a dictionary with all the words in the sentences
+    vocab = create_vocab(sentences, case_sensitive=case_sensitive)
+    
+    #get a dictionary with the embeddings for all the words
+    vocab = get_embeddings(vocab, embedding_type=embedding_type)
+    
+    return vocab
+
+def get_snli(transitions=False):
+    """feches the snli dataset.
+    Input:
+        transitions (bool), if False, the attributes 'hypothesis_transitions' 
+            and 'premise_transitions' are droped from the dataset. If True they
+            are kept untouched.
+    Output:
+        dictionary containing the datasets in the calss torchnlp.datasets.Dataset
+            valid keys are 'train', 'dev', 'test'"""
+    data={}
+    
+    #fetch data from snli
+    data["train"], data["dev"], data["test"] = snli_dataset(train = True,
+                                                            dev = True,
+                                                            test = True)
+    if transitions:
+        return data
+    
+    #excludes the unecessary transitions
+    #reduces the memory cost for processing the data later.
+    for d_set in data.keys():
+        for i in range(len(data[d_set])):
+            data[d_set][i].pop('hypothesis_transitions')
+            data[d_set][i].pop('premise_transitions')
+            
+    return data
     
     
     
