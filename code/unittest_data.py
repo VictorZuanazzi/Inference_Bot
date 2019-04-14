@@ -20,7 +20,7 @@ from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score
 
 #import functions to be tested
-from data import get_embeddings
+from data import get_embeddings, create_vocab
 
 
 class test(unittest.TestCase):
@@ -100,12 +100,30 @@ class test(unittest.TestCase):
         
         true_embedding = torch.zeros(300)
         word_dict = get_embeddings(word_dict)
-        print(word_dict)
+
         epsilon = 1e-7
          
-       self.assertLess(sum(true_embedding - word_dict['fkjdsai llds di ***']), epsilon)
-    
-   
+        self.assertLess(sum(true_embedding - word_dict['fkjdsai llds di ***']), epsilon)
+       
+    def test_create_vocab_lenght(self):
+       
+       sentences = ["I love avocado", 
+                     "As mina pira", 
+                     "As mina de Pira pira", 
+                     "Avocado is overrated"]
+       
+       #not case sensitive(Avocado and avocado are mapped to avocado)
+       vocab = create_vocab(sentences, case_sensitive=False)
+       
+       #9 unique words + 4 auxiliary words that are always included
+       self.assertEqual(13, len(vocab))
+             
+       #case sensitive (Avocado = Avocado, avocado = avocado)
+       vocab = create_vocab(sentences, case_sensitive=True)
+       
+       #11 unique words + 4 auxiliary words
+       self.assertEqual(15, len(vocab))
+       
 
 if __name__ == '__main__':
     unittest.main()
