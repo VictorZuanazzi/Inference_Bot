@@ -39,7 +39,19 @@ def get_embeddings(words, embedding_type='840B'):
     return {w: glove_vectors[w] for w in words}
 
 def create_vocab(sentences, case_sensitive=True):
-    """uses the sentences to create a vocabulary from sentences"""
+    """uses the sentences to create a dict vocabulary from sentences
+    Input:
+        sentences (iterable(str)), an itererable with the sentences in string format.
+        case_senstive (bool), in case True, the words in the sentence will be 
+            returned as is. If False, it will lower case all words in the 
+            sentence.
+    Output:
+        dict(str: None) a dictionary with all the words in the sentences.
+    """
+    
+    #in case sentences is one string
+    if type(sentences) == str:
+        sentences = [sentences]
     
     #puts all sentences into one giant sentence
     #words are lower cased to avoid 
