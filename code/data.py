@@ -15,7 +15,8 @@ from torchnlp.word_to_vector import GloVe
 from torchnlp.datasets.snli import snli_dataset
 import os
 import numpy as np
-import torch
+
+
 
 def get_embeddings(words, embedding_type='840B'):
     """get the word embeddings requested in words.
@@ -38,6 +39,7 @@ def get_embeddings(words, embedding_type='840B'):
         
     #returns the dictiorary with the resquested words
     return {w: glove_vectors[w] for w in words}
+
 
 def create_vocab(sentences, case_sensitive=True):
     """uses the sentences to create a dict vocabulary from sentences
@@ -93,32 +95,43 @@ def vocab_embeddings(sentences, case_sensitive=True, embedding_type='840B'):
     
     return vocab
 
-def get_snli(transitions=False):
+def filter_dash(data=False):
+    return data
+
+def get_snli():
     """feches the snli dataset.
-    Input:
-        transitions (bool), if False, the attributes 'hypothesis_transitions' 
-            and 'premise_transitions' are droped from the dataset. If True they
-            are kept untouched.
+    The attributes 'hypothesis_transitions' and 'premise_transitions' are 
+        droped from the dataset. 
+    The class '-' is also deleted from the data.
     Output:
-        dictionary containing the datasets in the calss torchnlp.datasets.Dataset
-            valid keys are 'train', 'dev', 'test'"""
+        dictionary containing the datasets with keys 'train', 'dev', 'test'
+    """
+    
     data={}
+    clean_data ={"train": [], "dev": [], "test": []}
     
     #fetch data from snli
     data["train"], data["dev"], data["test"] = snli_dataset(train = True,
                                                             dev = True,
                                                             test = True)
-    if transitions:
-        return data
     
-    #excludes the unecessary transitions
-    #reduces the memory cost for processing the data later.
     for d_set in data.keys():
-        for i in range(len(data[d_set])):
-            data[d_set][i].pop('hypothesis_transitions')
-            data[d_set][i].pop('premise_transitions')
+        
+        len_data = len(data[d_set])   
+        for i in range(len_data):
             
-    return data
+            #excludes class '-'
+            if data[d_set][i]["label"] != "-":
+                
+                #excludes the unecessary transitions
+                #reduces the memory cost for processing the data later.
+                data[d_set][i].pop('hypothesis_transitions')
+                data[d_set][i].pop('premise_transitions')   
+                
+                #stores data after cleaning.
+                clean_data[d_set].append(data[d_set][i])
+       
+    return clean_data
     
     
 def vocab_from_snli(data=False):
@@ -129,8 +142,7 @@ def vocab_from_snli(data=False):
             returns the vocab for the dataset. 
     Output:
         Same output as from vocab_embeddings()
-    """
-    
+    """    
     if not data:
         data = get_snli()
         data.pop('dev')
@@ -147,12 +159,41 @@ def vocab_from_snli(data=False):
     return vocab_embeddings(all_sentences)
     
         
+def split_snli(data=False):
+    """split snli in three lists, premises, hypothesis and labels.
+    Input: 
+        data: (bool=False or torchnlp.datasets.Dataset), if False it returns the
+            vocab for the training set of snli. If a dataset is given, it 
+            returns the vocab for the dataset. 
+    Output:
+        the index are shared among the lists.
+        premises: (list(str)), the premises in the snli dataset
+        hypothesis: (list(str)), the hypothsis in the snli dataset
+        labels: (list(str)), the labels in the snli dataset   
+    """
     
+    #get training data
+    if not data:
+        data = get_snli()
+        data.pop('dev')
+        data.pop('test')
+        data = data["train"]
+    
+    premises = []
+    hypothesis = []
+    #class "-" was filtered out, but it is included in the dict 
+    l_dict ={"entailment": 0, "neutral": 1, "contradiction": 2 , "-":1}
+    labels =[]
+    
+    #create the lists.
+    for d in data:
+        premises.append(d["premise"])
+        hypothesis.append(d["hypothesis"])
+        labels.append(l_dict[d["label"]])
+        
+    return premises, hypothesis, labels
 
-    
-    
-    
-    
+
     
     
     
