@@ -42,6 +42,11 @@ class InferClassifier(nn.Module):
         
         return self.classifier(x)
 
+#class MeanEncoder(nn.Module):
+#    #I am not sure this should be an nn.Module
+#    
+#    def __init__(self, )
+    
     
     
     
