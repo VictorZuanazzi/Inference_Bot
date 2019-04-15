@@ -1,0 +1,64 @@
+torch.device cuda
+model_type : base_line
+model_name : mean
+eval_freq : 500
+train_data_path : ./train/
+checkpoint_path : ./checkout/
+torch_device : cuda
+data_percentage : 1.0
+learning_rate : 0.1
+opt_type : adam
+Step 2 of project Take Over the World: Read Human.
+torch.device cuda
+fetching data
+parsing data
+encoding shit
+epoch: 0
+TRAIN acc: 0.332890961784878, loss: 9993.81778550148
+EVAL acc: 0.33823529411764636, loss: 168.1075611114502
+epoch: 1
+TRAIN acc: 0.3327580682744504, loss: 9944.643700242043
+EVAL acc: 0.3423202614379078, loss: 168.15544712543488
+learning rate: 0.02
+epoch: 2
+TRAIN acc: 0.33421261505296584, loss: 9430.782870292664
+EVAL acc: 0.3303717320261431, loss: 168.12764537334442
+epoch: 3
+TRAIN acc: 0.33301111208197715, loss: 9431.247886300087
+EVAL acc: 0.3313929738562085, loss: 168.16053545475006
+learning rate: 0.004
+epoch: 4
+TRAIN acc: 0.3337174501921949, loss: 9429.746427059174
+EVAL acc: 0.32730800653594705, loss: 168.10182166099548
+epoch: 5
+TRAIN acc: 0.3333442560875691, loss: 9429.878098249435
+EVAL acc: 0.3332312091503261, loss: 168.0948919057846
+learning rate: 0.0008
+epoch: 6
+TRAIN acc: 0.3331585692647801, loss: 9429.46780014038
+EVAL acc: 0.3265931372549013, loss: 168.09166085720062
+epoch: 7
+TRAIN acc: 0.3332095421180948, loss: 9429.474826455116
+EVAL acc: 0.3288398692810451, loss: 168.0905990600586
+learning rate: 0.00016
+epoch: 8
+TRAIN acc: 0.33226654433177333, loss: 9429.41621017456
+EVAL acc: 0.3384395424836594, loss: 168.08786177635193
+learning rate: 3.2000000000000005e-05
+epoch: 9
+TRAIN acc: 0.3335572497960627, loss: 9429.390363812447
+EVAL acc: 0.3379289215686268, loss: 168.08760976791382
+epoch: 10
+TRAIN acc: 0.33354814750082795, loss: 9429.395031571388
+EVAL acc: 0.33292483660130656, loss: 168.0871605873108
+epoch: 11
+TRAIN acc: 0.3333879471046962, loss: 9429.3978266716
+EVAL acc: 0.33251633986928036, loss: 168.08794784545898
+epoch: 12
+TRAIN acc: 0.3334516631713396, loss: 9429.389662146568
+EVAL acc: 0.3385416666666659, loss: 168.08564913272858
+learning rate: 6.400000000000001e-06
+saving results in folder...
+saving model in folder
+Training finished successfully. 
+Note to self, humanity is confusing.
