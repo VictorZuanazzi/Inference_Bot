@@ -6,3 +6,7 @@ GloVe-1\.2/
 code/__pycache__/
 
 code/\.word_vectors_cache/
+
+code/\.data/
+
+code/data/
