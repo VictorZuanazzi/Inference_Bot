@@ -18,10 +18,56 @@ This file contains functionalities to:
 @author: Victor Zuanazzi
 """
 
-from torchtext import data, vocab
-import os
-import numpy as np
 import torch
+import torchtext
+from torchtext import data, vocab
+
+def load_data(percentage_vocab = 1., percentage_data = 1.):
+    """üses torchtext to load data and vocab"""
+    
+    #initialize fiels, necessary for torchtext to work
+    text =  data.Field(sequential=True, 
+                       tokenize= lambda x: x.split(), 
+                       include_lengths=True, 
+                       use_vocab=True)
+    
+    label = data.Field(sequential=False, 
+                         use_vocab=True, 
+                         pad_token=None, 
+                         unk_token=None,
+                         batch_first=None)
+    
+    #load train, eval and test data
+    d_data = {"train": None, "dev": None, "test": None}
+    d_data["train"], d_data["dev"], d_data["test"]= torchtext.datasets.SNLI.splits(text,
+                                                                            label)
+    ##no code above this line
+    
+    #slice data if required  
+    start = 0                                                          
+    if percentage_data < 1:
+        for d in d_data:
+            end = int(len(d_data[d])*percentage_data)
+            d_data[d].examples = d_data[d].examples[start:end]
+        
+    #get glove vectors
+    glove_embeddings = vocab.Vectors('glove.840B.300d.txt', 
+                                 './data/glove_embedding/') 
+    
+    max_vocab =int(len(glove_embeddings.itos)*percentage_vocab)
+    
+    #build vocabulary using the training set
+    text.build_vocab(d_data["train"], 
+                     max_size = max_vocab, 
+                     vectors = glove_embeddings)
+    
+    #converts text labels into numeric data
+    label.build_vocab(d_data["train"])
+    
+    #what happens to text and label?
+
+    return d_data, text, label
+    
 
 
 def get_embeddings(path='./.word_vectors_cache', glove_type='glove.840B.300d.txt'):
