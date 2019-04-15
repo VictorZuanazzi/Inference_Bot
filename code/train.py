@@ -21,7 +21,7 @@ import os
 from utils import print_flags, accuracy
 from data_2 import get_snli, split_snli, vocab_from_snli, load_data
 from model import InferClassifier
-from encoder import MeanEncoder, UniLSTM
+from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
 
 import torchtext
 from torchtext import data
@@ -35,7 +35,7 @@ MAX_EPOCHS_DEFAULT = 500
 OPTIMIZER_DEFAULT = 'adam'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
-MODEL_NAME_DEFAULT = 'unilstm' #'mean'
+MODEL_NAME_DEFAULT = 'maxlstm'#'bilstm'#'unilstm' #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
@@ -93,10 +93,14 @@ def train(training_code = ''):
     model_n = FLAGS.model_name.lower()
     if model_n == 'mean':
         #executes baseline model
-        encoder = MeanEncoder
-        
+        encoder = MeanEncoder       
     elif model_n == 'unilstm':
+        #Uni directional LSTM
         encoder = UniLSTM
+    elif model_n == 'bilstm':
+        encoder = BiLSTM
+    elif model_n == 'maxlstm':
+        encoder = MaxLSTM
         
     model = InferClassifier(input_dim = 1200,
                                 n_classes = 3,
@@ -263,15 +267,13 @@ def main():
     print("Training finished successfully. \nNote to self, humanity is confusing.")
     print("Ask help to ELMo...")
     
-
-
 if __name__ == '__main__':
     # Command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_type', type = str, default = MODEL_TYPE_DEFAULT,
                           help='model type')
     parser.add_argument('--model_name', type = str, default = MODEL_NAME_DEFAULT,
-                          help='model name: "mean", "unilstm"')
+                          help='model name: "mean", "unilstm", "bilstm" or "maxlstm"')
     parser.add_argument('--train_data_path', type = str, default = TRAIN_DIR_DEFAULT,
                           help='Directory for storing train data')
     parser.add_argument('--checkpoint_path', type = str, default = CHECKOUT_DIR_DEFAULT,
