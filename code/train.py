@@ -133,7 +133,8 @@ def train(training_code = ''):
         print(f"optimizer {opt_type} is not available, using Adam instead")
         optimizer_func = optim.Adam
         
-    optimizer = optimizer_func(model.parameters(), 
+    optimizer = optimizer_func(filter(lambda x: x.requires_grad,
+                                      model.parameters()), 
                                lr = lr, 
                                weight_decay = weight_decay)
     
@@ -186,8 +187,7 @@ def train(training_code = ''):
             y = batch.label.requires_grad_(False)
                    
             #perform forward pass
-            y_pred = model.forward(x_pre.requires_grad_(False),
-                                   x_hyp.requires_grad_(False))        
+            y_pred = model.forward(x_pre, x_hyp)        
             
             loss_t = loss_func(y_pred, y)
             
@@ -195,16 +195,19 @@ def train(training_code = ''):
             dev_loss[epoch] += loss_t.item()
             dev_acc[epoch] += accuracy(y_pred, y)/dev_batches
             
+            #avoid memory issues
+            y_pred.detach()
+            
         #print eval results
         print(f"EVAL acc: {dev_acc[epoch]}, loss: {dev_loss[epoch]}")    
         
         #update learning rate
-        if dev_acc[epoch] > dev_acc[epoch-1]:
+        if dev_acc[epoch] < dev_acc[epoch-1]:
+            
+            #decrease learning rate as in the paper
             v_lr /= 5.0
-            #I am not sure if that is the best way to do it.
-            optimizer = optimizer_func(model.parameters(), 
-                                      lr = v_lr,
-                                      weight_decay=weight_decay)
+            for g in optimizer.param_groups:
+                g['lr'] = v_lr       
             
             print(f"learning rate: {v_lr}")
         
