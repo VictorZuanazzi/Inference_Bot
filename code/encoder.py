@@ -10,15 +10,21 @@ import torch.nn as nn
 
 class MeanEncoder(nn.Module):
 
-    def __init__(self):
+    def __init__(self, batch_size = 64):
         """initializes the mean encoder"""
         
         super(MeanEncoder, self).__init__()
         print("Hey, I am your baseline. I am not good, I am not bad, I just average!")
         
-    def forward(self, x, _):
+        self.batch_size = batch_size
+        
+    def forward(self, x, x_len):
         """ mean forward pass  """    
-        return x.mean(dim=0)
+        
+        out = torch.div(torch.sum(x, dim=0), 
+                        x_len.view(-1, 1).to(torch.float))
+        
+        return out
     
 class UniLSTM(nn.Module):
     
