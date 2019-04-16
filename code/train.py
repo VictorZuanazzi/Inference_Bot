@@ -215,18 +215,18 @@ def train(training_code = ''):
         epoch += 1
         
         #save intermediary results
-        np.save(path_checkpoint + "train_loss" + training_code, train_loss)
-        np.save(path_checkpoint + "train_acc" + training_code, train_acc)
-        np.save(path_checkpoint + "dev_less" + training_code, dev_loss)
-        np.save(path_checkpoint + "dev_acc" + training_code, dev_acc)
+        np.save(path_checkpoint + "train_loss" + model_n + training_code, train_loss)
+        np.save(path_checkpoint + "train_acc" + model_n + training_code, train_acc)
+        np.save(path_checkpoint + "dev_loss" + model_n + training_code, dev_loss)
+        np.save(path_checkpoint + "dev_acc" + model_n + training_code, dev_acc)
         torch.save(model.state_dict(), path_checkpoint + model_name + ".pt")
         
     #finished training:
     print("saving results in folder...")
-    np.save(path_finished + "train_loss" + training_code, train_loss)
-    np.save(path_finished + "train_acc" + training_code, train_acc)
-    np.save(path_finished + "dev_less" + training_code, dev_loss)
-    np.save(path_finished + "dev_acc" + training_code, dev_acc)
+    np.save(path_finished + "train_loss" + model_n + training_code, train_loss)
+    np.save(path_finished + "train_acc" + model_n + training_code, train_acc)
+    np.save(path_finished + "dev_loss" + model_n + training_code, dev_loss)
+    np.save(path_finished + "dev_acc" + model_n + training_code, dev_acc)
       
     print("saving model in folder")
     torch.save(model.state_dict(), path_checkpoint + model_name + ".pt")
