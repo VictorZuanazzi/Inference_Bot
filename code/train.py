@@ -266,7 +266,7 @@ def train(training_code = ''):
         loss_t = loss_func(y_pred, y)
         
         #get metrics
-        test_loss += loss_t.item()/test_size
+        test_loss += loss_t.item()/batch_size
         test_acc += accuracy(y_pred, y)/test_batches
         
         #avoid memory issues
