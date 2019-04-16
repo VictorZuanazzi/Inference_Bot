@@ -50,6 +50,13 @@ DTYPE = torch.FloatTensor
 
 FLAGS = None
 
+def print_model_params(model):
+  total = 0
+  for name, p in model.named_parameters():
+    total += np.prod(p.shape)
+    print("{:24s} {:12s} requires_grad={}".format(name, str(list(p.shape)), p.requires_grad))
+  print("\nTotal parameters: {}\n".format(total))
+
 def mini_batch_iterator(d_data, batch_size):
     """return lists with the indexes to perform mini batch.
     Input:
@@ -111,10 +118,12 @@ def train(training_code = ''):
         encoder = MaxLSTM
      
     #loads the model
-    model = InferClassifier(input_dim = 1200,
-                                n_classes = 3,
-                                encoder = encoder(),
-                                matrix_embeddings = text_f.vocab.vectors).to(DEVICE)
+    model = InferClassifier(encoder = encoder(),
+                            input_dim = 4*encoder().output_size,
+                            n_classes = 3,
+                            matrix_embeddings = text_f.vocab.vectors).to(DEVICE)
+    
+    print_model_params(model)
     
     #name the model
     #It could be called John, but that is hard to automate
