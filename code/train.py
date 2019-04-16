@@ -113,7 +113,7 @@ def train(training_code = ''):
     
     #name the model
     #It could be called John, but that is hard to automate
-    model_name = model.__class__.__name__ + "_"+  encoder.__class__.__name__ + "_" + training_code 
+    model_name = model.__class__.__name__ + "_"+  encoder.__class__.__name__ + "_" + model_n + "_"  + training_code 
     
     #initialize metrics
     train_acc = np.zeros(0)
