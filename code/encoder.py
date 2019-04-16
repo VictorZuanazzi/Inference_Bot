@@ -49,7 +49,8 @@ class UniLSTM(nn.Module):
         #sort data because pack_padded is too stupid to do it itself
         #you can answer this after figuring the sorting out:
         #https://stackoverflow.com/questions/49203019/how-to-use-pack-padded-sequence-with-multiple-variable-length-input-with-the-sam
-#        print(f"shapes len_x= {len_x.shape}, x= {x.shape}")
+        #helpful
+
 #        len_x, idx = len_x.sort(0, descending=True)
 #        x = x[:,idx]
 #              
@@ -57,24 +58,30 @@ class UniLSTM(nn.Module):
 #        x = torch.nn.utils.rnn.pack_padded_sequence(x, 
 #                                                    len_x, 
 #                                                    batch_first = self.batch_first)
+        
         #run LSTM, 
         #we are just interested in the last hidden state
-        _, (last_hidden, _) = self.uni_lstm(x)
+        x, (last_hidden, _) = self.uni_lstm(x)
         
-#        #re-introduce the paddings
-#        #doc pack_padded_sequence:
-#        #https://pytorch.org/docs/master/nn.html#torch.nn.utils.rnn.pack_padded_sequence
-#        _, last_hidden = torch.nn.utils.rnn.pad_packed_sequence(last_hidden, 
+        #re-introduce the paddings
+        #doc pack_padded_sequence:
+        #https://pytorch.org/docs/master/nn.html#torch.nn.utils.rnn.pack_padded_sequence
+#        x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, 
 #                                                      batch_first = self.batch_first)
 #        
+#        print(f"1 shapes x= {x.shape}")
+#        x = x[-1,:,:]
+#        
+#        print(f"2 shapes x= {x.shape}")
 #        #unsort the batch!
 #        _, idx = idx.sort(0, descending=False)
 #        x = x[:,idx]
-        
-        #reshape the data ito the correct output dimension
-        last_hidden = last_hidden.view(self.batch_size, self.hidden_dim)
-        #print(f"shape last_hidden: {last_hidden.shape}")
-        
+#        
+#        print(f"3 shapes x= {x.shape}")
+#        #reshape the data ito the correct output dimension
+        last_hidden = last_hidden.view(-1, self.hidden_dim)
+#        print(f"3 shape x: {x.shape}")
+#        
         return last_hidden
 
 class BiLSTM(nn.Module):
