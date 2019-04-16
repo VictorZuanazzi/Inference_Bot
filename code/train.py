@@ -147,14 +147,13 @@ def train(training_code = ''):
         print(f"optimizer {opt_type} is not available, using Adam instead")
         optimizer_func = optim.Adam
         
-    optimizer = optimizer_func(filter(lambda x: x.requires_grad,
-                                      model.parameters()), 
+    optimizer = optimizer_func(model.parameters(), 
                                lr = lr, 
                                weight_decay = weight_decay)
     
     
     
-    #tet the number of batches for each dataset
+    #get the number of batches for each dataset
     batch_iters = mini_batch_iterator(d_data, batch_size)
     train_baches = len(batch_iters["train"])
     dev_batches = len(batch_iters["dev"])
@@ -162,6 +161,7 @@ def train(training_code = ''):
     
     v_lr = lr
     epoch = 0
+    best_acc = .33 #best accuracy is initialized as random
     while v_lr > 1e-5 and epoch <= max_epochs: 
         print(f"epoch: {epoch}")
         
@@ -193,7 +193,7 @@ def train(training_code = ''):
             optimizer.step()
             
             #get metrics
-            train_loss[epoch] += loss_t.item()/train_size
+            train_loss[epoch] += loss_t.item()/batch_size
             train_acc[epoch] += accuracy(y_pred, y)/train_baches
         
         #print train results 
@@ -212,24 +212,27 @@ def train(training_code = ''):
             loss_t = loss_func(y_pred, y)
             
             #get metrics
-            dev_loss[epoch] += loss_t.item()/dev_size
+            dev_loss[epoch] += loss_t.item()/batch_size
             dev_acc[epoch] += accuracy(y_pred, y)/dev_batches
             
             #avoid memory issues
             y_pred.detach()
             
         #print eval results
-        print(f"EVAL acc: {dev_acc[epoch]}, loss: {dev_loss[epoch]}")    
+        print(f"EVAL acc: {dev_acc[epoch]}, loss: {dev_loss[epoch]}")   
+        
         
         #update learning rate
-        if dev_acc[epoch] < dev_acc[epoch-1]:
-            
+        if (dev_acc[epoch] < best_acc) & (opt_type == 'SGD'):
             #decrease learning rate as in the paper
             v_lr /= 5.0
+            print(f"learning rate: {v_lr}")
+            
             for g in optimizer.param_groups:
                 g['lr'] = v_lr       
-            
-            print(f"learning rate: {v_lr}")
+        else:
+            #updates the best accuracy
+            best_acc = dev_acc[epoch]
         
         #increment epoch
         epoch += 1
