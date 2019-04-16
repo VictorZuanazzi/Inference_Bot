@@ -37,7 +37,7 @@ MAX_EPOCHS_DEFAULT = 1000
 OPTIMIZER_DEFAULT = 'SGD'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
-MODEL_NAME_DEFAULT =  'mean'#'unilstm' #'maxlstm'#'bilstm'# #'mean'
+MODEL_NAME_DEFAULT =  'unilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
@@ -102,6 +102,7 @@ def train(training_code = ''):
     train_size = len(d_data["train"])
     dev_size = len(d_data["dev"])
     test_size = len(d_data["test"])
+    print(f"train size: {train_size}, dev size: {dev_size}, test size: {test_size}")
     
     #choses the encoder 
     print("chosing encoder")
