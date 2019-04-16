@@ -91,7 +91,7 @@ def train(training_code = ''):
     d_data, text_f, label_f = load_data(percentage_vocab = percentage_data, 
                                         percentage_data = percentage_data)   
     
-    #choses the model 
+    #choses the encoder 
     print("chosing encoder")
     model_n = FLAGS.model_name.lower()
     if model_n == 'mean':
@@ -104,7 +104,8 @@ def train(training_code = ''):
         encoder = BiLSTM
     elif model_n == 'maxlstm':
         encoder = MaxLSTM
-        
+     
+    #loads the model
     model = InferClassifier(input_dim = 1200,
                                 n_classes = 3,
                                 encoder = encoder(),
