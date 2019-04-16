@@ -268,9 +268,14 @@ def main():
     
     
     print("Step 2 of project Take Over the World: Read Human.")
+    #time the training time
+    time_start = time.time()
     
+    #does the actuall training
     train_acc, train_loss, dev_acc, dev_loss = train()
       
+    time_end = time.time()
+    print(f"Training took {time_end - time_start} s") 
     print("Training finished successfully. \nNote to self, humanity is confusing.")
     print("Ask help to ELMo...")
     
