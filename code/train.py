@@ -33,7 +33,7 @@ import time
 # Default constants
 LEARNING_RATE_DEFAULT = 0.1
 BATCH_SIZE_DEFAULT = 64
-MAX_EPOCHS_DEFAULT = 500
+MAX_EPOCHS_DEFAULT = 1000
 OPTIMIZER_DEFAULT = 'SGD'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
@@ -91,6 +91,11 @@ def train(training_code = ''):
     d_data, text_f, label_f = load_data(percentage_vocab = percentage_data, 
                                         percentage_data = percentage_data)   
     
+    #number of samples in each dataset
+    train_size = len(d_data["train"])
+    dev_size = len(d_data["dev"])
+    test_size = len(d_data["test"])
+    
     #choses the encoder 
     print("chosing encoder")
     model_n = FLAGS.model_name.lower()
@@ -138,6 +143,14 @@ def train(training_code = ''):
                                lr = lr, 
                                weight_decay = weight_decay)
     
+    
+    
+    #tet the number of batches for each dataset
+    batch_iters = mini_batch_iterator(d_data, batch_size)
+    train_baches = len(batch_iters["train"])
+    dev_batches = len(batch_iters["dev"])
+    test_batches = len(batch_iters["test"])
+    
     v_lr = lr
     epoch = 0
     while v_lr > 1e-5 and epoch <= max_epochs: 
@@ -145,8 +158,6 @@ def train(training_code = ''):
         
         #get the batch iterator for the mini batches
         batch_iters = mini_batch_iterator(d_data, batch_size)
-        train_baches = len(batch_iters["train"])
-        dev_batches = len(batch_iters["dev"])
         
         train_acc = np.append(train_acc, 0.)
         train_loss = np.append(train_loss, 0.)
@@ -173,7 +184,7 @@ def train(training_code = ''):
             optimizer.step()
             
             #get metrics
-            train_loss[epoch] += loss_t.item()
+            train_loss[epoch] += loss_t.item()/train_size
             train_acc[epoch] += accuracy(y_pred, y)/train_baches
         
         #print train results 
@@ -192,7 +203,7 @@ def train(training_code = ''):
             loss_t = loss_func(y_pred, y)
             
             #get metrics
-            dev_loss[epoch] += loss_t.item()
+            dev_loss[epoch] += loss_t.item()/dev_size
             dev_acc[epoch] += accuracy(y_pred, y)/dev_batches
             
             #avoid memory issues
@@ -220,7 +231,7 @@ def train(training_code = ''):
         np.save(path_checkpoint + "dev_loss" + model_n + training_code, dev_loss)
         np.save(path_checkpoint + "dev_acc" + model_n + training_code, dev_acc)
         torch.save(model.state_dict(), path_checkpoint + model_name + ".pt")
-        
+    
     #finished training:
     print("saving results in folder...")
     np.save(path_finished + "train_loss" + model_n + training_code, train_loss)
@@ -230,16 +241,41 @@ def train(training_code = ''):
       
     print("saving model in folder")
     torch.save(model.state_dict(), path_checkpoint + model_name + ".pt")
+    
+    ###########################################################################
+    #final test on the model
+    test_loss = 0
+    test_acc = 0
+    for batch in batch_iters["test"]:
+        x_pre = batch.premise
+        x_hyp = batch.hypothesis
+        y = batch.label
+               
+        #perform forward pass
+        y_pred = model.forward(x_pre, x_hyp)        
         
+        loss_t = loss_func(y_pred, y)
+        
+        #get metrics
+        test_loss += loss_t.item()/test_size
+        test_acc += accuracy(y_pred, y)/test_batches
+        
+        #avoid memory issues
+        y_pred.detach()
+        
+    #print eval results
+    print(f"TEST acc: {test_acc}, loss: {test_loss}")  
+    
+    #save test results
+    np.save(path_finished + "test_loss" + model_n + training_code, test_loss)
+    np.save(path_finished + "test_acc" + model_n + training_code, test_acc)
+    
             
     return train_acc, train_loss, dev_acc, dev_loss
 
-def evaluate():
-    """ëvaluate model on inference task"""
-    pass
-
 def test():
     """test model on inference task"""
+    
     pass
 
 
