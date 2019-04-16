@@ -7,16 +7,25 @@ Created on Mon Apr 15 16:43:20 2019
 
 import torch
 import torch.nn as nn
+import numpy as np
 
 class MeanEncoder(nn.Module):
 
-    def __init__(self, batch_size = 64):
+    def __init__(self, embedding_dim=300, hidden_dim=300, batch_size = 64):
         """initializes the mean encoder"""
         
         super(MeanEncoder, self).__init__()
-        print("Hey, I am your baseline. I am not good, I am not bad, I just average!")
-        
+        puns = {0: "Hey, I am your baseline. I am not good, I am not bad, I just average!",
+                1: "I am not sure you get what I mean.",
+                2: "Those sentences are so mean..."
+                }
+        print(puns[np.random.randint(len(puns))])
+        #Those are only neeced to make the code modular
         self.batch_size = batch_size
+        self.hidden_dim = hidden_dim
+        self.batch_size = batch_size
+        self.batch_first = False
+        self.output_size = hidden_dim
         
     def forward(self, x, x_len):
         """ mean forward pass  """    
@@ -28,16 +37,20 @@ class MeanEncoder(nn.Module):
     
 class UniLSTM(nn.Module):
     
-    def __init__(self, embedding_dim=300, hidden_dim=300, batch_size=64):
+    def __init__(self, embedding_dim=300, hidden_dim=2048, batch_size=64):
         
         super(UniLSTM, self).__init__()
-        print("Get yourself a direction and don't even look back.")
+        puns = {0: "Get yourself a direction and don't even look back.",
+                1: "Sequence rocks, average splatters",
+                }
+        print(puns[np.random.randint(len(puns))])
         
         #start stuff
         self.embedding_dim = embedding_dim
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.batch_first = False
+        self.output_size = hidden_dim
         
         self.uni_lstm = nn.LSTM(input_size = self.embedding_dim, 
                                 hidden_size = self.hidden_dim,
@@ -86,16 +99,22 @@ class UniLSTM(nn.Module):
 
 class BiLSTM(nn.Module):
     
-    def __init__(self, embedding_dim=300, hidden_dim=150, batch_size=64):
+    def __init__(self, embedding_dim=300, hidden_dim=2048, batch_size=64):
         
         super(BiLSTM, self).__init__()
-        print("When crossing the road, it is important to look both sides")
+        
+        #puns for initializing the model
+        puns = {0: "When crossing the road, it is important to look both sides.",
+                1: "Is here and there, there and here?",
+                }
+        print(puns[np.random.randint(len(puns))])
         
         #start stuff
         self.embedding_dim = embedding_dim
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.batch_first = False
+        self.output_size = 2*hidden_dim
         
         self.bi_lstm = nn.LSTM(input_size = self.embedding_dim, 
                                 hidden_size = self.hidden_dim,
@@ -137,16 +156,21 @@ class BiLSTM(nn.Module):
 
 class MaxLSTM(nn.Module):
     
-    def __init__(self, embedding_dim=300, hidden_dim=150, batch_size=64):
+    def __init__(self, embedding_dim=300, hidden_dim=2048, batch_size=64):
         
         super(MaxLSTM, self).__init__()
-        print("Lets make the Max out of those sentences.")
+
+        puns = {0: "Lets make the Max out of those sentences.",
+                1: "Let's play some pool...",
+                }
+        print(puns[np.random.randint(len(puns))])
         
         #start stuff
         self.embedding_dim = embedding_dim
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.batch_first = False
+        self.output_size = 2*hidden_dim
         
         self.bi_lstm = nn.LSTM(input_size = self.embedding_dim, 
                                 hidden_size = self.hidden_dim,
