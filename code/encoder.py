@@ -41,7 +41,7 @@ class UniLSTM(nn.Module):
         
         super(UniLSTM, self).__init__()
         puns = {0: "Get yourself a direction and don't even look back.",
-                1: "Sequence rocks, average splatters",
+                1: "Sequence matters, average splatters",
                 }
         print(puns[np.random.randint(len(puns))])
         
