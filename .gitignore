@@ -12,3 +12,5 @@ code/\.data/
 code/data/
 
 code/checkout/
+
+code/\.ipynb_checkpoints/
