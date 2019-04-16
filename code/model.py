@@ -47,11 +47,8 @@ class InferClassifier(nn.Module):
         I am not sure it is necessary to make this explicit."""
         
         #unpacks tuples (sentence, lenght)
-        sentence1 = sentence1[0]
-        len1 = sentence1[1]
-        sentence2 = sentence2[0]
-        len2 = sentence2[1]
-        
+        sentence1, len1 = sentence1
+        sentence2, len2 = sentence2
         
         #get the embeddings for the inputs
         u = self.embeddings(sentence1)
