@@ -28,19 +28,22 @@ from torchtext import data
 import torch
 import torch.optim as optim
 
+import time
+
 # Default constants
 LEARNING_RATE_DEFAULT = 0.1
 BATCH_SIZE_DEFAULT = 64
 MAX_EPOCHS_DEFAULT = 500
-OPTIMIZER_DEFAULT = 'adam'
+OPTIMIZER_DEFAULT = 'SGD'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
-MODEL_NAME_DEFAULT = 'maxlstm'#'bilstm'#'unilstm' #'mean'
+MODEL_NAME_DEFAULT =  'mean'#'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
 DEVICE = DEVICE_DEFAULT
-DATA_PERCENTAGE_DEFAULT =.1
+DATA_PERCENTAGE_DEFAULT =.01
+WEIGHT_DECAY_DEFAUT = 0.01
 
 #set datatype to torch tensor
 DTYPE = torch.FloatTensor
