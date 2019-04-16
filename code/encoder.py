@@ -129,8 +129,8 @@ class BiLSTM(nn.Module):
 #        x = x[:,idx]
         
         #concatenate both directons of the hidden dimention
-        last_hidden = last_hidden.view(1, 2, self.batch_size, self.hidden_dim)
-        last_hidden = torch.cat((last_hidden[:,0], last_hidden[:,1]), dim=2).view(self.batch_size, 2*self.hidden_dim)
+        last_hidden = last_hidden.view(1, 2, -1, self.hidden_dim)
+        last_hidden = torch.cat((last_hidden[:,0], last_hidden[:,1]), dim=2).view(-1, 2*self.hidden_dim)
         
         return last_hidden
 
