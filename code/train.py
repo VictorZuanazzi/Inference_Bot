@@ -297,6 +297,9 @@ if __name__ == '__main__':
                           help='size of mini batch')
     parser.add_argument('--max_epochs', type = int, default = MAX_EPOCHS_DEFAULT,
                           help='size of mini batch')
+    parser.add_argument('--weight_decay', type = float, default = WEIGHT_DECAY_DEFAUT,
+                          help='weight_decay for the optimizer')
     FLAGS, unparsed = parser.parse_known_args()
     
     main()
+    
