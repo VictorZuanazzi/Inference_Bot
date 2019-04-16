@@ -77,7 +77,7 @@ def train(training_code = ''):
     #parameters that have to be in FLAGS
     lr = FLAGS.learning_rate
     opt_type = FLAGS.opt_type
-    weight_decay = 0.99
+    weight_decay = FLAGS.weight_decay
     percentage_data = FLAGS.data_percentage
     path_finished = FLAGS.train_data_path
     path_checkpoint = FLAGS.checkpoint_path
