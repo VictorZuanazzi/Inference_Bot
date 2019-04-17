@@ -33,8 +33,8 @@ import time
 # Default constants
 LEARNING_RATE_DEFAULT = 0.1
 BATCH_SIZE_DEFAULT = 64
-MAX_EPOCHS_DEFAULT = 1000
-OPTIMIZER_DEFAULT = 'SGD'
+MAX_EPOCHS_DEFAULT = 2
+OPTIMIZER_DEFAULT = 'adam'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
 MODEL_NAME_DEFAULT =  'unilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
@@ -42,8 +42,8 @@ TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
 DEVICE = DEVICE_DEFAULT
-DATA_PERCENTAGE_DEFAULT =.01
-WEIGHT_DECAY_DEFAUT = 0.01
+DATA_PERCENTAGE_DEFAULT =.001
+WEIGHT_DECAY_DEFAUT = 0.0
 
 #set datatype to torch tensor
 DTYPE = torch.FloatTensor
@@ -51,11 +51,15 @@ DTYPE = torch.FloatTensor
 FLAGS = None
 
 def print_model_params(model):
-  total = 0
-  for name, p in model.named_parameters():
-    total += np.prod(p.shape)
-    print("{:24s} {:12s} requires_grad={}".format(name, str(list(p.shape)), p.requires_grad))
-  print("\nTotal parameters: {}\n".format(total))
+    """prints model archtecture and numbers of parameters. 
+    Cotersy from Karan Malhotra.
+    Input: (class nn.Module) the model"""
+    
+    total = 0
+    for name, p in model.named_parameters():
+        total += np.prod(p.shape)
+        print("{:24s} {:12s} requires_grad={}".format(name, str(list(p.shape)), p.requires_grad))
+    print("\nTotal parameters: {}\n".format(total))
 
 def mini_batch_iterator(d_data, batch_size):
     """return lists with the indexes to perform mini batch.
@@ -176,7 +180,6 @@ def train(training_code = ''):
         
         #######################################################################
         #train
-        
         for batch in batch_iters["train"]:
             x_pre = batch.premise
             x_hyp = batch.hypothesis
@@ -253,7 +256,8 @@ def train(training_code = ''):
     np.save(path_finished + "dev_acc" + model_n + training_code, dev_acc)
       
     print("saving model in folder")
-    torch.save(model.state_dict(), path_checkpoint + model_name + ".pt")
+    torch.save(model.state_dict(), path_finished + model_name + ".pt")
+    torch.save(model.encoder.state_dict(), path_finished + model_name + "enc.pt")
     
     ###########################################################################
     #final test on the model
