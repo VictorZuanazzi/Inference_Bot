@@ -51,8 +51,7 @@ def load_data(percentage_vocab = 1., percentage_data = 1.):
             d_data[d].examples = d_data[d].examples[start:end]
         
     #get glove vectors
-    glove_embeddings = vocab.Vectors('glove.840B.300d.txt', 
-                                 './data/glove_embedding/') 
+    glove_embeddings = get_embeddings()
     
     max_vocab =int(len(glove_embeddings.itos)*percentage_vocab)
     
@@ -70,28 +69,19 @@ def load_data(percentage_vocab = 1., percentage_data = 1.):
     
 
 
-def get_embeddings(path='./.word_vectors_cache', glove_type='glove.840B.300d.txt'):
+def get_embeddings(path='./data/glove_embedding/', glove_type='glove.840B.300d.txt'):
     """get the word embeddings requested in words.
     Embeddings of unknown words are a tensor of zeros.
     Input:
-        words: (str or list(str) or dict{str:_}), the words of interest.
-        embedding_type (str), the Glove type of embeddings. Only GloVe is 
-            supported for now.
+        path: (str), folder where the embeddings are located
+        glove_type: (str), file with the glove embeddings
     Returns:
         dict{str: torch.tensor} returs a dictionary that maps the words to 
             their embeddings.
     """
-    
-#    #convert the input words into a dictionary
-#    if type(words) == str:
-#        words = {words: None}
-#    
-#    #loads glove vectors into memory
-#    glove_vectors = vocab.Vectors(glove_type, path)
-#        
-#    #returns the dictiorary with the resquested words
-#    return {w: glove_vectors[w] for w in words}
-    return  vocab.Vectors(glove_type, path)
+    glove_embeddings = vocab.Vectors(glove_type, path) 
+
+    return glove_embeddings
 
 
 def create_vocab(sentences, case_sensitive=True):
