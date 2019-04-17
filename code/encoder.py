@@ -29,11 +29,17 @@ class MeanEncoder(nn.Module):
         
     def forward(self, x, x_len):
         """ mean forward pass  """    
-        
+
         out = torch.div(torch.sum(x, dim=0), 
                         x_len.view(-1, 1).to(torch.float))
         
         return out
+    
+def batch_to_sequence():
+    pass
+
+def sequence_to_batch():
+    pass
     
 class UniLSTM(nn.Module):
     
