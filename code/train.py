@@ -36,12 +36,12 @@ MAX_EPOCHS_DEFAULT = 100
 OPTIMIZER_DEFAULT = 'adam' #'SGD', 'adam'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = ''
-MODEL_NAME_DEFAULT =  'unilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
+MODEL_NAME_DEFAULT =  'maxlstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
 DEVICE = torch.device(DEVICE_DEFAULT)
-DATA_PERCENTAGE_DEFAULT =.00002
+DATA_PERCENTAGE_DEFAULT =.00003
 WEIGHT_DECAY_DEFAUT = 0.01
 
 #set datatype to torch tensor
