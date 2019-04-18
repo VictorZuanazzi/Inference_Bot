@@ -4,10 +4,15 @@ Created on Mon Apr 15 16:43:20 2019
 
 @author: Victor Zuanazzi
 """
-
+#heavy duty libraries
 import torch
 import torch.nn as nn
 import numpy as np
+
+#import local libraries
+from data_2 import get_embeddings
+
+
 
 class MeanEncoder(nn.Module):
 
@@ -17,7 +22,8 @@ class MeanEncoder(nn.Module):
         super(MeanEncoder, self).__init__()
         puns = {0: "Hey, I am your baseline. I am not good, I am not bad, I just average!",
                 1: "I am not sure you get what I mean.",
-                2: "Those sentences are so mean..."
+                2: "Those sentences are so mean...",
+                3: "Three words entered a bar, I don't know which one was first..."
                 }
         print(puns[np.random.randint(len(puns))])
         #Those are only neeced to make the code modular
@@ -35,6 +41,10 @@ class MeanEncoder(nn.Module):
         
         return out
     
+    def build_vocab(self):
+        return get_embeddings()
+        
+    
 def batch_to_sequence():
     pass
 
@@ -48,6 +58,7 @@ class UniLSTM(nn.Module):
         super(UniLSTM, self).__init__()
         puns = {0: "Get yourself a direction and don't even look back.",
                 1: "Sequence matters, average splatters",
+                2: "Three words entered a bar, and the last one is more important than the first one.",
                 }
         print(puns[np.random.randint(len(puns))])
         
@@ -112,6 +123,7 @@ class BiLSTM(nn.Module):
         #puns for initializing the model
         puns = {0: "When crossing the road, it is important to look both sides.",
                 1: "Is here and there, there and here?",
+                2: "Three words entered a bar, which one was the first again?",
                 }
         print(puns[np.random.randint(len(puns))])
         
@@ -168,6 +180,8 @@ class MaxLSTM(nn.Module):
 
         puns = {0: "Lets make the Max out of those sentences.",
                 1: "Let's play some pool...",
+                2: "What a fabulous weather, it is pool time!",
+                3: "Three words entered a bar, or was it just one very fat and tall word?",
                 }
         print(puns[np.random.randint(len(puns))])
         
