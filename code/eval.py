@@ -16,6 +16,7 @@ import torch
 import logging
 import argparse
 import numpy as np
+import time
 
 #local imports
 from data_2 import get_embeddings
@@ -38,7 +39,7 @@ TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
 DEVICE = DEVICE_DEFAULT
-INCLUDE_TESTS_DEFAUT = 'one'
+INCLUDE_TASKS_DEFAUT = 'one'
 
 # import senteval
 sys.path.insert(0, PATH_SENTEVAL)
@@ -163,15 +164,23 @@ def main():
     params_senteval['infersent'] = encoder.to(DEVICE)
 
     se = senteval.engine.SE(params_senteval, batcher, prepare)
-#    transfer_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
-#                      'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
-#                      'SICKEntailment', 'SICKRelatedness', 'STSBenchmark',
-#                      'Length', 'WordContent', 'Depth', 'TopConstituents',
-#                      'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-#                      'OddManOut', 'CoordinationInversion']
-    transfer_tasks = ['MR', 'CR', 'MPQA']
+    include_tasks = FLAGS.include_tasks.lower()
+    if include_tasks == 'all':
+        transfer_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
+                          'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
+                          'SICKEntailment', 'SICKRelatedness', 'STSBenchmark',
+                          'Length', 'WordContent', 'Depth', 'TopConstituents',
+                          'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
+                          'OddManOut', 'CoordinationInversion']
+    elif (include_tasks == 'few'):
+        transfer_tasks = ['MR', 'CR', 'MPQA']
+    else:
+        transfer_tasks = ['MR']
+    
+    start = time.time()
     results = se.eval(transfer_tasks)
     print(results)
+    print(f"Test took {time.time() - start} s")
 
 
 if __name__ == "__main__":
@@ -187,7 +196,7 @@ if __name__ == "__main__":
                           help='torch devices types: "cuda" or "cpu"')
     parser.add_argument('--batch_size', type = int, default = BATCH_SIZE_DEFAULT,
                           help='size of mini batch')
-    parser.add_argument('--inlcude_tests', type = str, defaut = INCLUDE_TESTS_DEFAUT,
+    parser.add_argument('--include_tasks', type = str, default = INCLUDE_TASKS_DEFAUT,
                         help='decide how many tests to include: "one", "few", "all"')
     FLAGS, unparsed = parser.parse_known_args()
     
