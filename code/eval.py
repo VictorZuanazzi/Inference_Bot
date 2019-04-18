@@ -28,10 +28,7 @@ PATH_TO_DATA = './SentEval/data'
 PATH_TO_W2V = './data/glove_embedding/glove.840B.300d.txt',                               
 MODEL_PATH = './train/InferClassifier_type_mean_.pt'
 PATH_TO_VEC = './data/glove_embedding/glove.840B.300d.txt'
-LEARNING_RATE_DEFAULT = 0.1
 BATCH_SIZE_DEFAULT = 64
-MAX_EPOCHS_DEFAULT = 2
-OPTIMIZER_DEFAULT = 'adam'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
 MODEL_NAME_DEFAULT =  'unilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
@@ -181,6 +178,10 @@ def main():
     results = se.eval(transfer_tasks)
     print(results)
     print(f"Test took {time.time() - start} s")
+    
+    #save resulst
+    path_finished = FLAGS.tran_data_path
+    np.save(path_finished + "transfer_task_" + include_staks + "_" + enc_name )
 
 
 if __name__ == "__main__":
