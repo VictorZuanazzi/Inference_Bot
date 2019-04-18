@@ -10,56 +10,44 @@ Run from the command line as: python train.py <model_type> <model_name> <checkpo
 @author: Victor Zuanazzi
 """
 
+#heavy duty shit
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
-import argparse
-import numpy as np
-import os
-
-from utils import print_flags, accuracy
-from data_2 import get_snli, split_snli, vocab_from_snli, load_data
-from model import InferClassifier
-from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
-
 import torchtext
 from torchtext import data
 import torch
 import torch.optim as optim
-
 import time
+import argparse
+import numpy as np
+import os
+
+#local imports
+from utils import print_flags, accuracy, print_model_params, check_dir
+from data_2 import get_snli, split_snli, vocab_from_snli, load_data
+from model import InferClassifier
+from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
 
 # Default constants
-LEARNING_RATE_DEFAULT = 0.1
+LEARNING_RATE_DEFAULT = 0.0001
 BATCH_SIZE_DEFAULT = 64
-MAX_EPOCHS_DEFAULT = 2
-OPTIMIZER_DEFAULT = 'adam'
+MAX_EPOCHS_DEFAULT = 100
+OPTIMIZER_DEFAULT = 'adam' #'SGD', 'adam'
 DATA_DIR_DEFAULT = './data/'
-MODEL_TYPE_DEFAULT = 'base_line'
+MODEL_TYPE_DEFAULT = ''
 MODEL_NAME_DEFAULT =  'unilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
-DEVICE = DEVICE_DEFAULT
-DATA_PERCENTAGE_DEFAULT =.001
-WEIGHT_DECAY_DEFAUT = 0.0
+DEVICE = torch.device(DEVICE_DEFAULT)
+DATA_PERCENTAGE_DEFAULT =.00002
+WEIGHT_DECAY_DEFAUT = 0.01
 
 #set datatype to torch tensor
 DTYPE = torch.FloatTensor
 
 FLAGS = None
-
-def print_model_params(model):
-    """prints model archtecture and numbers of parameters. 
-    Cotersy from Karan Malhotra.
-    Input: (class nn.Module) the model"""
-    
-    total = 0
-    for name, p in model.named_parameters():
-        total += np.prod(p.shape)
-        print("{:24s} {:12s} requires_grad={}".format(name, str(list(p.shape)), p.requires_grad))
-    print("\nTotal parameters: {}\n".format(total))
 
 def mini_batch_iterator(d_data, batch_size):
     """return lists with the indexes to perform mini batch.
@@ -113,26 +101,34 @@ def train(training_code = ''):
     model_n = FLAGS.model_name.lower()
     if model_n == 'mean':
         #executes baseline model
-        encoder = MeanEncoder       
+        encoder = MeanEncoder      
+        in_dim= 4*300
     elif model_n == 'unilstm':
         #Uni directional LSTM
         encoder = UniLSTM
+        in_dim= 4*2048
     elif model_n == 'bilstm':
         encoder = BiLSTM
+        in_dim= 4*2*2048
     elif model_n == 'maxlstm':
         encoder = MaxLSTM
-     
+        in_dim= 4*2*2048
+        
     #loads the model
     model = InferClassifier(encoder = encoder(),
-                            input_dim = 4*encoder().output_size,
+                            input_dim = in_dim,
                             n_classes = 3,
                             matrix_embeddings = text_f.vocab.vectors).to(DEVICE)
     
+    #print paramters of the model
     print_model_params(model)
     
     #name the model
-    #It could be called John, but that is hard to automate
-    model_name = model.__class__.__name__ + "_"+  encoder.__class__.__name__ + "_" + model_n + "_"  + training_code 
+    #It could be called John, Amanda or Thomas, but that is hard to automate
+    model_name = model.__class__.__name__ + "_" + model_n + "_" 
+    model_name += encoder.__class__.__name__ + "_"
+    model_name += model_n + "_"
+    model_name += training_code + "_"
     
     #initialize metrics
     train_acc = np.zeros(0)
@@ -141,22 +137,24 @@ def train(training_code = ''):
     dev_loss = np.zeros(0)
   
     #create loss function
+    #should I sent the loss function .to(DEVICE) ??????????????????????????????
     loss_func = torch.nn.CrossEntropyLoss()
     
-    #loads optimizer (change it to SGD for presenting the results)
+    #loads optimizer (SGD should be used to replicate the results)
     if opt_type == 'adam':
         optimizer_func = optim.Adam
+        v_lr = 10 #just set it to a hibh number bot enter the while loop
     elif opt_type == 'SGD':
         optimizer_func = optim.SGD
+        v_lr = lr
     else:
         print(f"optimizer {opt_type} is not available, using Adam instead")
         optimizer_func = optim.Adam
+        v_lr = 10 #just set it to a hibh number bot enter the while loop
         
     optimizer = optimizer_func(model.parameters(), 
                                lr = lr, 
                                weight_decay = weight_decay)
-    
-    
     
     #get the number of batches for each dataset
     batch_iters = mini_batch_iterator(d_data, batch_size)
@@ -164,10 +162,10 @@ def train(training_code = ''):
     dev_batches = len(batch_iters["dev"])
     test_batches = len(batch_iters["test"])
     
-    v_lr = lr
     epoch = 0
-    best_acc = .33 #best accuracy is initialized as random
+    best_acc = 0.0 
     while v_lr > 1e-5 and epoch <= max_epochs: 
+        v_lr = lr
         print(f"epoch: {epoch}")
         
         #get the batch iterator for the mini batches
@@ -181,6 +179,8 @@ def train(training_code = ''):
         #######################################################################
         #train
         for batch in batch_iters["train"]:
+            
+            #loads the batch
             x_pre = batch.premise
             x_hyp = batch.hypothesis
             y = batch.label
@@ -190,6 +190,8 @@ def train(training_code = ''):
             
             #perform forward pass
             y_pred = model.forward(x_pre, x_hyp)         
+            print(f"y_pred: {y_pred.argmax(dim=1)}")
+            
             loss_t = loss_func(y_pred, y)
             
             #backward propagation
@@ -197,11 +199,12 @@ def train(training_code = ''):
             optimizer.step()
             
             #get metrics
-            train_loss[epoch] += loss_t.item()/batch_size
+            train_loss[epoch] += loss_t.item()/y.shape[0]
             train_acc[epoch] += accuracy(y_pred, y)/train_baches
         
         #print train results 
         print(f"TRAIN acc: {train_acc[epoch]}, loss: {train_loss[epoch]}") 
+        print(f"lr: {optimizer.param_groups[0]['lr']}")
         
         #######################################################################
         #evaluation
@@ -216,7 +219,7 @@ def train(training_code = ''):
             loss_t = loss_func(y_pred, y)
             
             #get metrics
-            dev_loss[epoch] += loss_t.item()/batch_size
+            dev_loss[epoch] += loss_t.item()/y.shape[0]
             dev_acc[epoch] += accuracy(y_pred, y)/dev_batches
             
             #avoid memory issues
@@ -237,6 +240,11 @@ def train(training_code = ''):
         else:
             #updates the best accuracy
             best_acc = dev_acc[epoch]
+        
+        #overfit 
+        if train_acc[epoch] == 1.0:
+            print("!!!Warning!!! The train accuracy is too dam high!")
+            break
         
         #increment epoch
         epoch += 1
@@ -274,7 +282,7 @@ def train(training_code = ''):
         loss_t = loss_func(y_pred, y)
         
         #get metrics
-        test_loss += loss_t.item()/batch_size
+        test_loss += loss_t.item()/y.shape[0]
         test_acc += accuracy(y_pred, y)/test_batches
         
         #avoid memory issues
@@ -290,12 +298,6 @@ def train(training_code = ''):
             
     return train_acc, train_loss, dev_acc, dev_loss
 
-def test():
-    """test model on inference task"""
-    
-    pass
-
-
 def main():
     """
     Main function
@@ -307,18 +309,14 @@ def main():
         DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     else:
         DEVICE = torch.device('cpu')
-    
-    print(f"torch.device {DEVICE}")
-    
+        
     # Print all Flags to confirm parameter settings
     print_flags(FLAGS)
     
-    #create directories if they don't exist
-    if not os.path.exists(FLAGS.train_data_path):
-        os.makedirs(FLAGS.train_data_path)
-    if not os.path.exists(FLAGS.checkpoint_path):
-        os.makedirs(FLAGS.checkpoint_path)
     
+    #create directories if they don't exist
+    check_dir(FLAGS.train_data_path)
+    check_dir(FLAGS.checkpoint_path)  
     
     print("Step 2 of project Take Over the World: Read Human.")
     #time the training time
@@ -328,7 +326,7 @@ def main():
     train_acc, train_loss, dev_acc, dev_loss = train()
       
     time_end = time.time()
-    print(f"Training took {time_end - time_start} s") 
+    print(f"Training took {time_end - time_start} seconds") 
     print("Training finished successfully. \nNote to self, humanity is confusing.")
     print("Ask help to ELMo...")
     
