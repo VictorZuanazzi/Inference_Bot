@@ -22,7 +22,7 @@ import torch
 import torchtext
 from torchtext import data, vocab
 
-def load_data(percentage_vocab = 1., percentage_data = 1.):
+def load_data(percentage_vocab = 1., percentage_data = 1., min_samples=10):
     """üses torchtext to load data and vocab"""
     
     #initialize fiels, necessary for torchtext to work
@@ -47,7 +47,7 @@ def load_data(percentage_vocab = 1., percentage_data = 1.):
     start = 0                                                          
     if percentage_data < 1:
         for d in d_data:
-            end = int(len(d_data[d])*percentage_data)
+            end = max(int(len(d_data[d])*percentage_data), min_samples)
             d_data[d].examples = d_data[d].examples[start:end]
         
     #get glove vectors
