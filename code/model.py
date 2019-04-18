@@ -39,24 +39,28 @@ class InferClassifier(nn.Module):
         #creates a MLP
         self.classifier = nn.Sequential(
                 nn.Linear(self.input_dim, self.hidden_dim),
-                nn.Tanh(), #not present in the original code.
+                #nn.Tanh(), #not present in the original code.
                 nn.Linear(self.hidden_dim, self.n_classes))
         
     def forward(self, sentence1, sentence2):
-        """forward pass of the classifier
-        I am not sure it is necessary to make this explicit."""
+        """forward pass of the classifier."""
         
+        #print(f"sentence1: {sentence1[0].shape}, {sentence1[0].shape}")
         #unpacks tuples (sentence, lenght)
         sentence1, len1 = sentence1
         sentence2, len2 = sentence2
+        #print(f"sentence1: {sentence1.shape}, len1: {len1.shape}")
         
         #get the embeddings for the inputs
         u = self.embeddings(sentence1)
         v = self.embeddings(sentence2)
+        #consider using u.transpose(0,1)
+        #print(f"u: {u.shape}, v: {v.shape}")
         
         #pass the data through the enconder
         u = self.encoder.forward(u, len1)
         v = self.encoder.forward(v, len2)
+        #print(f"u: {u.shape}, v: {v.shape}")
         
         #concatenate the data
         x = self.special_concatenation(u, v)
