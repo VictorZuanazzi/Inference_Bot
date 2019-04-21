@@ -21,13 +21,14 @@ This file contains functionalities to:
 import torch
 import torchtext
 from torchtext import data, vocab
+from nltk import word_tokenize
 
-def load_data(percentage_vocab = 1., percentage_data = 1., min_samples=10):
+def load_data(percentage_vocab = 1., percentage_data = 1., min_samples=64):
     """üses torchtext to load data and vocab"""
     
     #initialize fiels, necessary for torchtext to work
     text =  data.Field(sequential=True, 
-                       tokenize= lambda x: x.split(), 
+                       tokenize= word_tokenize, 
                        include_lengths=True, 
                        use_vocab=True)
     
