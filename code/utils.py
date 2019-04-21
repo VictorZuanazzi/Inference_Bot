@@ -8,6 +8,9 @@ import torch
 import os
 import numpy as np
 
+from model import InferClassifier
+from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
+
 def print_flags(FLAGS):
   """
   Prints all entries in FLAGS variable.
@@ -51,12 +54,16 @@ def check_dir(path):
         
 
 def plot_grad_flow(named_parameters, name):
-    '''Plots the gradients flowing through different layers in the net during training.
-    Can be used for checking for possible gradient vanishing / exploding problems.
+    '''Plots the gradients flowing through different layers in the net during 
+    training. Can be used for checking for possible gradient vanishing or 
+    exploding problems.
     
     Usage: Plug this function in Trainer class after loss.backwards() as 
-    "plot_grad_flow(self.model.named_parameters())" to visualize the gradient flow'''
+    "plot_grad_flow(self.model.named_parameters())" to visualize the gradient 
+    flow.
     
+    Source: https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/10
+    '''
     #private inport
     import matplotlib.pyplot as plt
     from matplotlib.lines import Line2D
@@ -85,5 +92,26 @@ def plot_grad_flow(named_parameters, name):
     
     plt.savefig("./grad flow/" + name)
         
+def load_encoder(enc_name='mean', path="./train/"):
+    
+    enc_name = enc_name.lower()
+    if enc_name == 'mean':
+        #executes baseline model
+        encoder = MeanEncoder()
+        name = "InferClassifier_mean_type_mean__enc.pt"
+    elif enc_name == 'unilstm':
+        #Uni directional LSTM
+        encoder = UniLSTM()
+        name = "InferClassifier_type_unilstm__enc.pt"
+    elif enc_name == 'bilstm':
+        encoder = BiLSTM()
+        name = "InferClassifier_type_bilstm__enc.pt"
+    elif enc_name == 'maxlstm':
+        encoder = MaxLSTM()
+        path = './train/MaxLSTM/20190421/'
+        name = "InferClassifier_type_maxlstm__enc.pt"
         
+    encoder.load_state_dict(torch.load(path+name))
+    
+    return encoder        
         
