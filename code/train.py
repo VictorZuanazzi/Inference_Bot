@@ -14,6 +14,11 @@ Run from the command line as: python train.py <model_type> <model_name> <checkpo
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+#make debugging more digestible
+import os
+os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
+
 import torchtext
 from torchtext import data
 import torch
@@ -21,28 +26,28 @@ import torch.optim as optim
 import time
 import argparse
 import numpy as np
-import os
 
 #local imports
-from utils import print_flags, accuracy, print_model_params, check_dir
+from utils import print_flags, accuracy, print_model_params, check_dir, plot_grad_flow
 from data_2 import get_snli, split_snli, vocab_from_snli, load_data
 from model import InferClassifier
 from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
 
 # Default constants
-LEARNING_RATE_DEFAULT = 0.0001
+LEARNING_RATE_DEFAULT = 0.01
 BATCH_SIZE_DEFAULT = 64
-MAX_EPOCHS_DEFAULT = 100
+MAX_EPOCHS_DEFAULT = 20
 OPTIMIZER_DEFAULT = 'adam' #'SGD', 'adam'
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = ''
-MODEL_NAME_DEFAULT =  'maxlstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
+MODEL_NAME_DEFAULT =  'unilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
-DEVICE_DEFAULT = 'cpu'
+DEVICE_DEFAULT = 'cpu' #'cuda'
 DEVICE = torch.device(DEVICE_DEFAULT)
-DATA_PERCENTAGE_DEFAULT =.00003
+DATA_PERCENTAGE_DEFAULT =.000005
 WEIGHT_DECAY_DEFAUT = 0.01
+PLOT_GRAD_DEFAULT = True
 
 #set datatype to torch tensor
 DTYPE = torch.FloatTensor
@@ -69,6 +74,8 @@ def mini_batch_iterator(d_data, batch_size):
     return batch_iter
 
 
+
+
 def train(training_code = ''):
     """train model on inference task"""
 
@@ -82,6 +89,7 @@ def train(training_code = ''):
     path_checkpoint = FLAGS.checkpoint_path
     batch_size = FLAGS.batch_size
     max_epochs = FLAGS.max_epochs
+    plot_grad = FLAGS.plot_grad
     
     
     #fetch data
@@ -120,12 +128,13 @@ def train(training_code = ''):
                             n_classes = 3,
                             matrix_embeddings = text_f.vocab.vectors).to(DEVICE)
     
+    model.train() 
     #print paramters of the model
     print_model_params(model)
     
     #name the model
     #It could be called John, Amanda or Thomas, but that is hard to automate
-    model_name = model.__class__.__name__ + "_" + model_n + "_" 
+    model_name = model.__class__.__name__ + "_"
     model_name += encoder.__class__.__name__ + "_"
     model_name += model_n + "_"
     model_name += training_code + "_"
@@ -150,7 +159,7 @@ def train(training_code = ''):
     else:
         print(f"optimizer {opt_type} is not available, using Adam instead")
         optimizer_func = optim.Adam
-        v_lr = 10 #just set it to a hibh number bot enter the while loop
+        v_lr = 10 #just set it to a high number bot enter the while loop
         
     optimizer = optimizer_func(model.parameters(), 
                                lr = lr, 
@@ -190,12 +199,13 @@ def train(training_code = ''):
             
             #perform forward pass
             y_pred = model.forward(x_pre, x_hyp)         
-            print(f"y_pred: {y_pred.argmax(dim=1)}")
             
             loss_t = loss_func(y_pred, y)
             
             #backward propagation
             loss_t.backward()
+            
+            #optimization step
             optimizer.step()
             
             #get metrics
@@ -204,7 +214,10 @@ def train(training_code = ''):
         
         #print train results 
         print(f"TRAIN acc: {train_acc[epoch]}, loss: {train_loss[epoch]}") 
-        print(f"lr: {optimizer.param_groups[0]['lr']}")
+        
+        if plot_grad:
+            #visualize the gradient flow
+            plot_grad_flow(model.named_parameters(), name=model_n +str(epoch))
         
         #######################################################################
         #evaluation
@@ -352,9 +365,11 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type = int, default = BATCH_SIZE_DEFAULT,
                           help='size of mini batch')
     parser.add_argument('--max_epochs', type = int, default = MAX_EPOCHS_DEFAULT,
-                          help='size of mini batch')
+                          help='max number of epochs')
     parser.add_argument('--weight_decay', type = float, default = WEIGHT_DECAY_DEFAUT,
                           help='weight_decay for the optimizer')
+    parser.add_argument('--plot_grad', type = bool, default = PLOT_GRAD_DEFAULT,
+                        help= 'True to plot gradient flow, False not to.')
     FLAGS, unparsed = parser.parse_known_args()
     
     main()
