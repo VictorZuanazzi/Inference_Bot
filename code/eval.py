@@ -21,6 +21,7 @@ import time
 #local imports
 from data_2 import get_embeddings
 from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
+from utils import print_flags
 
 # Set global variables
 PATH_SENTEVAL = './SentEval'
@@ -31,12 +32,12 @@ PATH_TO_VEC = './data/glove_embedding/glove.840B.300d.txt'
 BATCH_SIZE_DEFAULT = 64
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
-MODEL_NAME_DEFAULT =  'unilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
+ENCODER_NAME_DEFAULT =  'maxlstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
 DEVICE = DEVICE_DEFAULT
-INCLUDE_TASKS_DEFAUT = 'one'
+INCLUDE_TASKS_DEFAUT = 'all'
 
 # import senteval
 sys.path.insert(0, PATH_SENTEVAL)
@@ -52,21 +53,22 @@ def load_encoder(enc_name='mean', path="./train/"):
     if enc_name == 'mean':
         #executes baseline model
         encoder = MeanEncoder()
-        name = "InferClassifier_type_mean_enc.pt"
+        name = "InferClassifier_mean_type_mean__enc.pt"
     elif enc_name == 'unilstm':
         #Uni directional LSTM
         encoder = UniLSTM()
-        name = "InferClassifier_type_unilstm_enc.pt"
+        name = "InferClassifier_type_unilstm__enc.pt"
     elif enc_name == 'bilstm':
         encoder = BiLSTM()
-        name = "InferClassifier_type_bilstm_enc.pt"
+        name = "InferClassifier_type_bilstm__enc.pt"
     elif enc_name == 'maxlstm':
         encoder = MaxLSTM()
-        name = "InferClassifier_type_maxilstm_enc.pt"
+        path = './train/MaxLSTM/20190421/'
+        name = "InferClassifier_type_maxlstm__enc.pt"
         
     encoder.load_state_dict(torch.load(path+name))
     
-    return encoder
+    return encoder.to(DEVICE)
 
 # Create dictionary
 def create_dictionary(sentences, threshold=0):
@@ -137,6 +139,8 @@ def batcher(params, batch):
     embeddings = np.vstack(embeddings)
     return embeddings
 
+
+
 def main():
     global DEVICE
     if FLAGS.torch_device == 'cuda': 
@@ -144,8 +148,13 @@ def main():
     else:
         DEVICE = torch.device('cpu')
     
+    
+    # Print all Flags to confirm parameter settings
+    print_flags(FLAGS)
+    enc_name = FLAGS.enc_name
+    
     # Load InferSent model
-    encoder = load_encoder(enc_name='mean')
+    encoder = load_encoder(enc_name=FLAGS.enc_name)
     
     # define senteval params
     params_senteval = {'task_path': PATH_TO_DATA, 
@@ -180,15 +189,15 @@ def main():
     print(f"Test took {time.time() - start} s")
     
     #save resulst
-    path_finished = FLAGS.tran_data_path
-    np.save(path_finished + "transfer_task_" + include_staks + "_" + enc_name )
+    path_finished = FLAGS.train_data_path
+    np.save(path_finished + "transfer_task_" + include_tasks + "_" + enc_name , results)
 
 
 if __name__ == "__main__":
     # Command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type = str, default = MODEL_NAME_DEFAULT,
-                          help='model name: "mean", "unilstm", "bilstm" or "maxlstm"')
+    parser.add_argument('--enc_name', type = str, default = ENCODER_NAME_DEFAULT,
+                          help='model name: "mean", "unilstm", "bilstm", "maxlstm"')
     parser.add_argument('--train_data_path', type = str, default = TRAIN_DIR_DEFAULT,
                           help='Directory for storing train data')
     parser.add_argument('--checkpoint_path', type = str, default = CHECKOUT_DIR_DEFAULT,
