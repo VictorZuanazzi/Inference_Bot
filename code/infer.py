@@ -30,6 +30,17 @@ def sentence_to_idx(sentence, w2i_dict):
 
 def infer_bot(encoder_type='maxlstm'):
     #get embeddings:
+    start_messages= np.array(["Please be patient, this GloVe is heavy!",
+                              "Loading GloVe...", 
+                              "It fits like a GloVe (it just takes a while...",
+                              "... ... .. ... ...", 
+                              "While you wait, why don't you google if pinguins have knews?",
+                              "While you wait... Why are there no mamals that are green?",
+                              "Whiie you wait, have you wondered on what are the main drivers for the pay gap between men and women",
+                              "While you wait, google tiny turtle eating a strawberry."])
+                              
+    print(f"{np.random.choice(start_messages, 1)}")
+    
     _, text_f, _ = load_data()
     
     #possible entailments
@@ -68,7 +79,7 @@ def infer_bot(encoder_type='maxlstm'):
         y_pred = model.forward((premise.expand(1,-1).transpose(0,1), p_len),
                            (hypothesis.expand(1,-1).transpose(0,1), h_len))
         
-        print(f"The premise {entailment[y_pred.argmax().item()]} the hypothesis")
+        print(f"\n The premise {entailment[y_pred.argmax().item()]} the hypothesis. \n")
         
         if input("Do you want to keep playing? [y/n] ") == 'n':
             one_more = False
