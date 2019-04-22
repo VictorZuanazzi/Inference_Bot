@@ -16,7 +16,7 @@ import numpy as np
 
 from model import InferClassifier
 from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
-from utils import load_encoder
+from utils import load_encoder, path_n_name, load_classifier
 
 def sentence_to_idx(sentence, w2i_dict):
     
@@ -28,35 +28,17 @@ def sentence_to_idx(sentence, w2i_dict):
     
     return indexes
 
-def load_classifier(text_f):
-    encoder = MaxLSTM()
-    path = './train/MaxLSTM/20190421/'
-    m_name = "InferClassifier_type_maxlstm__.pt"
-    e_name = "InferClassifier_type_maxlstm__enc.pt"
-    
-    encoder.load_state_dict(torch.load(path+e_name))
-    
-    model = InferClassifier(input_dim= 4 * encoder.output_size,
-                            n_classes=3, 
-                            encoder = encoder, 
-                            matrix_embeddings = text_f.vocab.vectors)
-    
-    model.load_state_dict(torch.load(path+m_name))
-    
-    return model
-
-    
-def main():
-    
+def infer_bot(encoder_type='maxlstm'):
     #get embeddings:
     _, text_f, _ = load_data()
     
     #possible entailments
     entailment= {0: "entails",1: "contradicts", 2: "is neutral to"}
+    
     ask_premise = np.array(["Give me a premise, please.", 
                    "Would you be so kind as to provide me of a premise?", 
                    "Premise, NOW!", "What is your premise my dear?",
-                   "Tell me something."])
+                   "Tell me something.", "P R E M I S E !"])
     
     ask_hypothesis = np.array(["Give me a hypothesis, please.", 
                    "Would you be so kind as to provide me of a hypothesis?", 
@@ -64,10 +46,12 @@ def main():
                    "What do you want to know about the premise?", 
                    "Be careful with what you want to infer from the premise!",
                    "To hypothetize is a cognitive task...",
-                   "What do you want to infer from that?"])
+                   "What do you want to infer from that?", 
+                   "H Y P O T H E S I S !"])
     
     
-    model = load_classifier(text_f)
+    model = load_classifier(text_f.vocab.vectors, 
+                            encoder_type = encoder_type)
     
     one_more = True
     while one_more:
@@ -88,8 +72,13 @@ def main():
         
         if input("Do you want to keep playing? [y/n] ") == 'n':
             one_more = False
-
     
+    
+def main(encoder_type='maxlstm'):
+    #this main is totally useless!
+    infer_bot(encoder_type='maxlstm')
+    
+
 if __name__ == '__main__':
     main()
 
