@@ -19,9 +19,9 @@ import numpy as np
 import time
 
 #local imports
-from data_2 import get_embeddings
+from data_2 import get_embeddings, load_data
 from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
-from utils import print_flags
+from utils import print_flags, load_encoder
 
 # Set global variables
 PATH_SENTEVAL = './SentEval'
@@ -32,7 +32,7 @@ PATH_TO_VEC = './data/glove_embedding/glove.840B.300d.txt'
 BATCH_SIZE_DEFAULT = 64
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
-ENCODER_NAME_DEFAULT =  'maxlstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
+ENCODER_NAME_DEFAULT =  'bilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
@@ -46,29 +46,10 @@ import senteval
 #set device
 DEVICE = torch.device('cpu')
 
+#temporary:
+#GLOVE_VECTORS = get_embeddings()
+_, text_f, _ = load_data()
 
-def load_encoder(enc_name='mean', path="./train/"):
-    
-    enc_name = enc_name.lower()
-    if enc_name == 'mean':
-        #executes baseline model
-        encoder = MeanEncoder()
-        name = "InferClassifier_mean_type_mean__enc.pt"
-    elif enc_name == 'unilstm':
-        #Uni directional LSTM
-        encoder = UniLSTM()
-        name = "InferClassifier_type_unilstm__enc.pt"
-    elif enc_name == 'bilstm':
-        encoder = BiLSTM()
-        name = "InferClassifier_type_bilstm__enc.pt"
-    elif enc_name == 'maxlstm':
-        encoder = MaxLSTM()
-        path = './train/MaxLSTM/20190421/'
-        name = "InferClassifier_type_maxlstm__enc.pt"
-        
-    encoder.load_state_dict(torch.load(path+name))
-    
-    return encoder.to(DEVICE)
 
 # Create dictionary
 def create_dictionary(sentences, threshold=0):
@@ -96,6 +77,17 @@ def create_dictionary(sentences, threshold=0):
         word2id[w] = i
 
     return id2word, word2id
+    
+def create_dictionary_2(sentences, threshold=0):
+    glove_vector = GLOVE_VECTORS
+    
+    #get the index for each word
+    word2id = glove_vector.stoi
+    
+    #get the word for eac index
+    id2word = glove_vector.itos
+    
+    return id2word, word2id
 
 # Get word vectors from vocabulary (glove, word2vec, fasttext ..)
 def get_wordvec(path_to_vec, word2id):
@@ -113,6 +105,46 @@ def get_wordvec(path_to_vec, word2id):
         {1} words'.format(len(word_vec), len(word2id)))
     return word_vec
 
+# Get word vectors from vocabulary (glove, word2vec, fasttext ..)
+def get_wordvec_2(path_to_vec, word2id):
+    """function that returns the embeddings, stollen form SentEval"""
+    word_vec = GLOVE_VECTORS
+
+    with io.open(path_to_vec, 'r', encoding='utf-8') as f:
+        # if word2vec or fasttext file : skip first line "next(f)"
+        for line in f:
+            word, vec = line.split(' ', 1)
+            if word in word2id:
+                word_vec[word] = np.fromstring(vec, sep=' ')
+    
+
+    logging.info('Found {0} words with word vectors, out of \
+        {1} words'.format(len(word_vec), len(word2id)))
+    return word_vec
+
+def prepare_2(params, samples):
+    
+    #add special tokens to the dict.    
+    samples.append(['<s>'])
+    samples.append(['</s>'])
+    samples.append(['<p>'])
+    samples.append(['<unk>'])
+    
+    #initialize empity dictionaries
+    words = {}
+    word2id = {}
+
+    for s in samples:
+        for word in s:
+            word2id[word] = text_f.vocab.stoi[word]
+            words[word] = np.array(text_f.vocab.vectors[text_f.vocab.stoi[word]])
+    
+    params.word2id = word2id
+    params.word_vec = words
+    params.wvec_dim = 300
+    
+    #WTF this return nothing?
+    return
 
 # SentEval prepare and batcher
 def prepare(params, samples):
@@ -155,6 +187,7 @@ def main():
     
     # Load InferSent model
     encoder = load_encoder(enc_name=FLAGS.enc_name)
+    encoder.to(DEVICE)
     
     # define senteval params
     params_senteval = {'task_path': PATH_TO_DATA, 
@@ -169,7 +202,7 @@ def main():
 
     params_senteval['infersent'] = encoder.to(DEVICE)
 
-    se = senteval.engine.SE(params_senteval, batcher, prepare)
+    se = senteval.engine.SE(params_senteval, batcher, prepare_2)
     include_tasks = FLAGS.include_tasks.lower()
     if include_tasks == 'all':
         transfer_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
@@ -181,7 +214,7 @@ def main():
     elif (include_tasks == 'few'):
         transfer_tasks = ['MR', 'CR', 'MPQA']
     else:
-        transfer_tasks = ['MR']
+        transfer_tasks = ['CR']
     
     start = time.time()
     results = se.eval(transfer_tasks)
