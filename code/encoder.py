@@ -68,7 +68,6 @@ def batch_to_sequence(x, len_x, batch_first):
     #sort data because pack_padded is too stupid to do it itself
     #you can answer this after figuring the sorting out:
     #https://stackoverflow.com/questions/49203019/how-to-use-pack-padded-sequence-with-multiple-variable-length-input-with-the-sam
-    #helpful
     len_x, idx = len_x.sort(0, descending=True)
     x = x[:,idx]
           
@@ -108,7 +107,7 @@ def sequence_to_batch(x, len_x, idx, output_size, batch_first, all_hidden = Fals
     #get the indexes of the last token (where the lstm should stop)
     longest_sentence = max(len_x)
     #subtracsts -1 to see what happens
-    last_word = [i*longest_sentence + len_x[i] for i in range(len(len_x))]
+    last_word = [i*longest_sentence + len_x[i]-1 for i in range(len(len_x))]
     
     #get the relevant hidden states
     x = x.view(-1, output_size)
@@ -148,11 +147,19 @@ class UniLSTM(nn.Module):
         x, len_x, idx = batch_to_sequence(x, len_x, self.batch_first)
         
         #run LSTM, 
-        x, (_, _) = self.uni_lstm(x)
+        x, (last_hidden, _) = self.uni_lstm(x)
+        
+#        #out = last_hidden.view(-1, self.output_size)
+#        longest_sentence = max(len_x)
+#        last_word = [i*longest_sentence + len_x[i]-1 for i in range(len(len_x))]
+#    
+#        #get the relevant hidden states
+#        x = x.view(-1, self.output_size)
+#        out = x[last_word,:]
                 
         #takes the pad_packed_sequence and gives you the embedding vectors
-        x = sequence_to_batch(x, len_x, idx, self.output_size, self.batch_first)        
-        return x
+        out = sequence_to_batch(x, len_x, idx, self.output_size, self.batch_first)        
+        return out
 
 class BiLSTM(nn.Module):
     
@@ -185,12 +192,20 @@ class BiLSTM(nn.Module):
         x, len_x, idx = batch_to_sequence(x, len_x, self.batch_first)
         
         #run LSTM, 
-        x, (_, _) = self.bi_lstm(x)
+        x, (last_hidden, _) = self.bi_lstm(x)
+        
+#        #out = last_hidden.view(-1, self.output_size)
+#        longest_sentence = max(len_x)
+#        last_word = [i*longest_sentence + len_x[i]-1 for i in range(len(len_x))]
+#    
+#        #get the relevant hidden states
+#        x = x.view(-1, self.output_size)
+#        out = x[last_word,:]
         
         #takes the pad_packed_sequence and gives you the embedding vectors
-        x = sequence_to_batch(x, len_x, idx, self.output_size, self.batch_first)
+        out = sequence_to_batch(x, len_x, idx, self.output_size, self.batch_first)
         
-        return x
+        return out
 
 
 class MaxLSTM(nn.Module):
@@ -221,14 +236,14 @@ class MaxLSTM(nn.Module):
     def forward(self, x, len_x):
         
         #convert batch into a packed_pad sequence
-        x, len_x, idx = batch_to_sequence(x, len_x, self.batch_first)
+        #x, len_x, idx = batch_to_sequence(x, len_x, self.batch_first)
         
         #run LSTM, 
         #we want all hidden states
         x, (_, _) = self.bi_lstm(x)
         
         #takes the pad_packed_sequence and gives you the embedding vectors
-        x = sequence_to_batch(x, len_x, idx, self.output_size, self.batch_first, True)
+        #x = sequence_to_batch(x, len_x, idx, self.output_size, self.batch_first, True)
         
         #get the max value for each dimension
         #not perfect, but will do for now. The paddings can be retrieved in case
