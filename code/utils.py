@@ -91,27 +91,153 @@ def plot_grad_flow(named_parameters, name):
                 Line2D([0], [0], color="k", lw=4)], ['max-gradient', 'mean-gradient', 'zero-gradient'])
     
     plt.savefig("./grad flow/" + name)
-        
-def load_encoder(enc_name='mean', path="./train/"):
-    
+
+def path_n_name(enc_name='maxlstm', path=None, m_name=None, e_name=None):
+    """Centralized path and file names, returns the inputs that are not specified
+    for regarding the enc_name.
+    Input:
+        enc_name: (str) name of the encoder to be loaded. The options are 'mean',
+            'unilstm', 'bilstm' and 'maxlstm', the last one is executed if 
+            no valid encoder name is given.
+        path: (str) path to the encoder. If None is given, then the latest path
+            is used.
+        e_name: (str) the file name of the pre-trained encoder. If None is 
+            given, the latest file is used.
+    Output:
+        path: (str) the path to the files.
+        m_name: (str) the classifier name file name. 
+        e_name (str) the encoder file name.
+    """
     enc_name = enc_name.lower()
+    
+    if enc_name == 'mean':
+        #latest path is used if other not specified.
+        if not path:
+            path = "./train/baseline/20190418/"
+            
+        #latest encoder is used if other not specified.
+        if not e_name:
+            e_name = "InferClassifier_mean_type_mean__enc.pt"
+            
+        #latest classifier used if None is given
+        if not m_name:
+            m_name = "InferClassifier_mean_type_mean__.pt"
+            
+    elif enc_name == 'unilstm':
+        #latest path is used if other not specified.
+        if not path:
+            path = "./train/"
+            
+        #latest encoder is used if other not specified.
+        if not e_name:
+            e_name = "InferClassifier_type_unilstm__enc.pt"
+            
+        #latest classifier is used if other not specified.
+        if not m_name:
+            m_name = "InferClassifier_type_unilstm__.pt"
+            
+    elif enc_name == 'bilstm':
+        #latest path is used if other not specified.
+        if not path:
+            path = "./train/"
+            
+        #latest encoder is used if other not specified.
+        if not e_name:
+            e_name = "InferClassifier_type_bilstm__enc.pt"
+            
+        #latest classifier is used if other not specified.
+        if not m_name:
+            m_name = "InferClassifier_type_bilstm__.pt"
+    else:
+        #latest path is used if other not specified.
+        if not path:
+            path = './train/MaxLSTM/20190421/'
+            
+        #latest encoder is used if other not specified.
+        if not e_name:
+            e_name = "InferClassifier_type_maxlstm__enc.pt"
+        
+        #latest classifier is used if other not specified.
+        if not m_name:
+            m_name = "InferClassifier_type_maxlstm__.pt"
+            
+    return path, m_name, e_name
+       
+def load_encoder(enc_name='maxlstm', path=None, e_name=None):
+    """Loads the correct encoder.
+    Input:
+        enc_name: (str) name of the encoder to be loaded. The options are 'mean',
+            'unilstm', 'bilstm' and 'maxlstm', the last one is executed if 
+            no valid encoder name is given.
+        path: (str) path to the encoder. If None is given, then the latest path
+            is used.
+        e_name: (str) the file name of the pre-trained encoder. If None is 
+            given, the latest file is used.
+    Output: 
+        Pretrained encoder from encoder.py"""
+        
+    #lower case to avoid user issues.
+    enc_name = enc_name.lower()
+    
+    #get path and file nime
+    path, _, e_name = path_n_name(enc_name = enc_name,
+                                       path = path,
+                                       m_name = None,
+                                       e_name = e_name)
+    
     if enc_name == 'mean':
         #executes baseline model
         encoder = MeanEncoder()
-        name = "InferClassifier_mean_type_mean__enc.pt"
+            
     elif enc_name == 'unilstm':
         #Uni directional LSTM
         encoder = UniLSTM()
-        name = "InferClassifier_type_unilstm__enc.pt"
+            
     elif enc_name == 'bilstm':
+        #Bidirectional LSTM
         encoder = BiLSTM()
-        name = "InferClassifier_type_bilstm__enc.pt"
-    elif enc_name == 'maxlstm':
-        encoder = MaxLSTM()
-        path = './train/MaxLSTM/20190421/'
-        name = "InferClassifier_type_maxlstm__enc.pt"
         
-    encoder.load_state_dict(torch.load(path+name))
+    else:
+        #standard option is the MaxLSTM
+        encoder = MaxLSTM()
+        
+    encoder.load_state_dict(torch.load(path+e_name))
     
     return encoder        
         
+
+def load_classifier(embedding_matrix, encoder_type='maxlstm',  path=None, m_name=None, e_name=None):
+    """Loads the pretrained classifier of class model.InferClassifier.
+    Input:
+        embedding_matrix: (torch.tensor) the embedding matrix used for training 
+            the classifier.
+        encoder_type: (str), the encoder, check utils.load_encoder for options.
+        path: (srt), path to the classifier. It assumes that the classifier and
+            the encoder are stored in the same folder.
+        m_name: (str), file name of the pretrained model.
+        e_name: (str), file name of the pretrained encoder.
+    Output:
+        Pretrained classifier of class model.InferClassifier
+            """
+    
+    #Loads the encoder
+    encoder = load_encoder(enc_name = encoder_type, 
+                           path=path, 
+                           e_name=e_name)
+    
+    #Loads the model class
+    model = InferClassifier(input_dim= 4 * encoder.output_size,
+                            n_classes=3, 
+                            encoder = encoder, 
+                            matrix_embeddings = embedding_matrix)
+    
+    #get path and file name
+    path, m_name, _ = path_n_name(enc_name = encoder_type,
+                                  path = path, 
+                                  m_name = m_name, 
+                                  e_name = e_name)
+    
+    #finally, loads the model
+    model.load_state_dict(torch.load(path+m_name))
+    
+    return model
