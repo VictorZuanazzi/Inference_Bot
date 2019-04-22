@@ -34,7 +34,7 @@ from model import InferClassifier
 from encoder import MeanEncoder, UniLSTM, BiLSTM, MaxLSTM
 
 # Default constants
-LEARNING_RATE_DEFAULT = 0.01
+LEARNING_RATE_DEFAULT = 0.001
 BATCH_SIZE_DEFAULT = 64
 MAX_EPOCHS_DEFAULT = 20
 OPTIMIZER_DEFAULT = 'adam' #'SGD', 'adam'
@@ -72,9 +72,6 @@ def mini_batch_iterator(d_data, batch_size):
                                 shuffle = True) 
 
     return batch_iter
-
-
-
 
 def train(training_code = ''):
     """train model on inference task"""
@@ -128,7 +125,7 @@ def train(training_code = ''):
                             n_classes = 3,
                             matrix_embeddings = text_f.vocab.vectors).to(DEVICE)
     
-    model.train() 
+    
     #print paramters of the model
     print_model_params(model)
     
@@ -146,7 +143,6 @@ def train(training_code = ''):
     dev_loss = np.zeros(0)
   
     #create loss function
-    #should I sent the loss function .to(DEVICE) ??????????????????????????????
     loss_func = torch.nn.CrossEntropyLoss()
     
     #loads optimizer (SGD should be used to replicate the results)
@@ -173,8 +169,9 @@ def train(training_code = ''):
     
     epoch = 0
     best_acc = 0.0 
+    v_lr = lr
     while v_lr > 1e-5 and epoch <= max_epochs: 
-        v_lr = lr
+        
         print(f"epoch: {epoch}")
         
         #get the batch iterator for the mini batches
@@ -187,6 +184,7 @@ def train(training_code = ''):
         
         #######################################################################
         #train
+        model.train() 
         for batch in batch_iters["train"]:
             
             #loads the batch
@@ -221,6 +219,7 @@ def train(training_code = ''):
         
         #######################################################################
         #evaluation
+        model.eval()
         for batch in batch_iters["dev"]:
             x_pre = batch.premise
             x_hyp = batch.hypothesis
@@ -284,6 +283,7 @@ def train(training_code = ''):
     #final test on the model
     test_loss = 0
     test_acc = 0
+    model.eval()
     for batch in batch_iters["test"]:
         x_pre = batch.premise
         x_hyp = batch.hypothesis
