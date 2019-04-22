@@ -25,7 +25,7 @@ def accuracy(predictions, targets):
   of the network.
   Args:
     predictions: 2D one hot econded vector[batch_size, n_classes]
-    targets: 2D vector with the class indices  [batch_size].
+    targets: 1D vector with the class indices  [batch_size].
   Returns:
     accuracy: scalar float, the accuracy of predictions,
               i.e. the average correct predictions over the whole batch
@@ -79,7 +79,7 @@ def plot_grad_flow(named_parameters, name):
     plt.bar(np.arange(len(max_grads)), max_grads, alpha=0.1, lw=1, color="c")
     plt.bar(np.arange(len(max_grads)), ave_grads, alpha=0.1, lw=1, color="b")
     plt.hlines(0, 0, len(ave_grads)+1, lw=2, color="k" )
-    plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
+    plt.xticks(range(0,len(ave_grads), 1), layers, rotation=15)
     plt.xlim(left=0, right=len(ave_grads))
     plt.ylim(bottom = -0.001, top=0.02) # zoom in on the lower gradient regions
     plt.xlabel("Layers")
