@@ -32,7 +32,7 @@ PATH_TO_VEC = './data/glove_embedding/glove.840B.300d.txt'
 BATCH_SIZE_DEFAULT = 64
 DATA_DIR_DEFAULT = './data/'
 MODEL_TYPE_DEFAULT = 'base_line'
-ENCODER_NAME_DEFAULT =  'bilstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
+ENCODER_NAME_DEFAULT =  'maxlstm' #'unilstm' #'maxlstm'#'bilstm'# #'mean'
 TRAIN_DIR_DEFAULT = './train/'
 CHECKOUT_DIR_DEFAULT = './checkout/'
 DEVICE_DEFAULT = 'cpu'
@@ -154,6 +154,7 @@ def prepare(params, samples):
     return
 
 def batcher(params, batch):
+    
     batch = [sent if sent != [] else ['.'] for sent in batch]
     embeddings = []
 
@@ -171,7 +172,32 @@ def batcher(params, batch):
     embeddings = np.vstack(embeddings)
     return embeddings
 
+def batcher_2(params, batch):
+    batch = [sent if sent != [] else ['.'] for sent in batch]
+    embeddings = []
 
+    for sent in batch:
+        sentvec = []
+        num_words = 0
+        for word in sent:
+            if word in params.word_vec:
+                sentvec.append(params.word_vec[word])
+                num_words += 1
+        if not sentvec:
+            vec = np.zeros(params.wvec_dim)
+            sentvec.append(vec)
+            
+        if num_words <= 1:
+            #work around sentences of lengh 0 or 1
+            sentvec = torch.tensor(sentvec).view(1, 1, 300)
+        else:
+            sentvec = torch.tensor(sentvec).view(1, -1, 300)
+        sentvec = params['infersent'].forward(sentvec, num_words)
+        embeddings.append(sentvec.detach().numpy())
+
+    embeddings = np.vstack(embeddings)
+    return embeddings
+    
 
 def main():
     global DEVICE
@@ -187,7 +213,6 @@ def main():
     
     # Load InferSent model
     encoder = load_encoder(enc_name=FLAGS.enc_name)
-    encoder.to(DEVICE)
     
     # define senteval params
     params_senteval = {'task_path': PATH_TO_DATA, 
@@ -202,7 +227,7 @@ def main():
 
     params_senteval['infersent'] = encoder.to(DEVICE)
 
-    se = senteval.engine.SE(params_senteval, batcher, prepare_2)
+    se = senteval.engine.SE(params_senteval, batcher_2, prepare_2)
     include_tasks = FLAGS.include_tasks.lower()
     if include_tasks == 'all':
         transfer_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
