@@ -113,15 +113,15 @@ def path_n_name(enc_name='maxlstm', path=None, m_name=None, e_name=None):
     if enc_name == 'mean':
         #latest path is used if other not specified.
         if not path:
-            path = "./train/baseline/20190418/"
+            path = "./train/baseline/20190422/"
             
         #latest encoder is used if other not specified.
         if not e_name:
-            e_name = "InferClassifier_mean_type_mean__enc.pt"
+            e_name = "InferClassifier_type_mean__enc.pt"
             
         #latest classifier used if None is given
         if not m_name:
-            m_name = "InferClassifier_mean_type_mean__.pt"
+            m_name = "InferClassifier_type_mean__.pt"
             
     elif enc_name == 'unilstm':
         #latest path is used if other not specified.
